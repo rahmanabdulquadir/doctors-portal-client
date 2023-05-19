@@ -21,7 +21,7 @@ export const router = createBrowserRouter([
     ]
   },
   {
-    path: '/login',
+    path: '/',
     element:<FormSite></FormSite>,
     children:[
       {
