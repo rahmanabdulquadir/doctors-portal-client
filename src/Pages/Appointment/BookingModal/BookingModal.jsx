@@ -1,29 +1,50 @@
 import { format } from "date-fns";
-import React from "react";
+import React, { useContext } from "react";
+import { toast } from "react-hot-toast";
+import { AuthContext } from "../../../contexts/AuthProvider/AuthProvider";
 
-const BookingModal = ({ treatment, selectedDate, setTreatment }) => {
-  const { name, slots } = treatment;
+const BookingModal = ({ treatment, selectedDate, setTreatment, refetch }) => {
+  const { name: treatmentName, slots } = treatment;
+  const{user} = useContext(AuthContext)
   const date = format(selectedDate, "PP");
 
   const handleBookingModal = (event) => {
     event.preventDefault();
-    const {name} = treatment;
     const form = event.target;
     const slot = form.slot.value;
-    const patientName = form.name.value;
+    const name = form.name.value;
     const email = form.email.value;
     const phone = form.phone.value;
     const booking = {
       appointmentDate: date,
-      treatment : name,
-      patient: patientName,
+      treatment: treatmentName,
+      patient: name,
       slot,
-      email, 
-      phone
-    }
-    setTreatment(null)
-    console.log(booking)
-  }
+      email,
+      phone,
+    };
+
+    fetch("http://localhost:5000/bookings", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(booking),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data)
+        if (data.acknowledged) {
+          setTreatment(null);
+          toast.success("Booking Confirmed");
+          refetch()
+        }
+        else{
+          setTreatment(null)
+          toast.error(`${data.message}`);
+        }
+      }); 
+  };
   return (
     <>
       <input type="checkbox" id="booking-modal" className="modal-toggle" />
@@ -36,7 +57,10 @@ const BookingModal = ({ treatment, selectedDate, setTreatment }) => {
             ✕
           </label>
           <h3 className="text-lg font-bold">{name}</h3>
-          <form onSubmit={handleBookingModal} className="grid grid-cols-1 gap-3 mt-7">
+          <form
+            onSubmit={handleBookingModal}
+            className="grid grid-cols-1 gap-3 mt-7"
+          >
             <input
               type="text"
               name="date"
@@ -46,7 +70,7 @@ const BookingModal = ({ treatment, selectedDate, setTreatment }) => {
               className="input input-bordered w-full"
             />
             <select name="slot" className="select select-bordered w-full">
-              <option disabled selected>
+              <option disabled defaultValue={'Select your slot'}>
                 Select your slot
               </option>
               {slots.map((slot, i) => (
@@ -57,12 +81,16 @@ const BookingModal = ({ treatment, selectedDate, setTreatment }) => {
             </select>
             <input
               name="name"
+              defaultValue={user?.displayName}
+              disabled
               type="text"
               placeholder="Your name"
               className="input input-bordered w-full"
             />
             <input
               name="email"
+              disabled
+              defaultValue={user?.email}
               type="email"
               placeholder="Email Address"
               className="input input-bordered w-full"
@@ -71,6 +99,7 @@ const BookingModal = ({ treatment, selectedDate, setTreatment }) => {
               name="phone"
               type="text"
               placeholder="Phone number"
+              required
               className="input input-bordered w-full"
             />
             <input

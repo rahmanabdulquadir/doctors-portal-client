@@ -2,17 +2,42 @@ import { format } from "date-fns";
 import React, { useEffect, useState } from "react";
 import AvailableOption from "./AvailableOption";
 import BookingModal from "../BookingModal/BookingModal";
+import { useQuery } from "@tanstack/react-query";
+import { ThreeCircles } from "react-loader-spinner";
 
 const AvailableAppointments = ({ selectedDate }) => {
-  const [appointmentOptions, setAppointmentOptions] = useState([]);
   const [treatment, setTreatment] = useState(null);
+  const date = format(selectedDate, "PP")
 
-  useEffect(() => {
-    fetch("appointmentOptions.json")
-      .then((res) => res.json())
-      .then((data) => setAppointmentOptions(data));
-  }, []);
-
+  const {data: appointmentOptions = [], isLoading, refetch} = useQuery({
+    queryKey: ['appointmentOptions', date],
+    queryFn: () => {
+      const data = fetch(`http://localhost:5000/appointmentOptions?date=${date}`)
+      .then(res => res.json())
+      return data
+    }
+      
+  })
+  if(isLoading){
+    <ThreeCircles
+          className="flex justify-center items-center"
+          height="100"
+          width="100"
+          color="black"
+          wrapperStyle={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: '260px'
+          }}
+          wrapperClass=""
+          visible={true}
+          ariaLabel="three-circles-rotating"
+          outerCircleColor=""
+          innerCircleColor=""
+          middleCircleColor=""
+        ></ThreeCircles>
+  }
+ 
   return (
     <div className="mt-12">
       <div>
@@ -35,6 +60,7 @@ const AvailableAppointments = ({ selectedDate }) => {
           selectedDate={selectedDate}
           treatment={treatment}
           setTreatment={setTreatment}
+          refetch={refetch}
         ></BookingModal>
       )}
     </div>

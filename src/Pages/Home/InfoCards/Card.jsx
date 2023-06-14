@@ -4,8 +4,9 @@ const Card = ({ card }) => {
   const { name, img, description, bgColor } = card;
   return (
     <div className={`card card-side shadow-xl px-6 py-4 ${bgColor}`}>
-      <figure>
+      <figure className="">
         <img
+        
           src={img}
           alt="Movie"
         />
